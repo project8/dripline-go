@@ -7,6 +7,7 @@ FROM golang
 # For either the local or remote development installation of http2dripline, you'll need the dependencies
 ADD ./dripline /go/src/github.com/project8/dripline-go/dripline
 ADD ./http2dripline /go/src/github.com/project8/dripline-go/http2dripline
+ADD ./h2d-config.yaml /root/h2d-config.yaml
 RUN go get github.com/kardianos/osext && \
     go get github.com/spf13/viper &&\
     go get github.com/pborman/uuid &&\
@@ -15,6 +16,8 @@ RUN go get github.com/kardianos/osext && \
     go get github.com/project8/swarm/Go/utility &&\
     go get github.com/project8/swarm/Go/logging
 #    go get github.com/project8/dripline-go/dripline
+RUN go install ./src/github.com/project8/dripline-go/dripline &&\
+    go install ./src/github.com/project8/dripline-go/http2dripline
 
 # Download, build, and install development (remote) http2dripline
 # Use this if you want http2dripline from a non-master branch of dripline
@@ -38,4 +41,4 @@ RUN go get github.com/kardianos/osext && \
 # # go install http2dripline
 # # http2dripline
 
-#ENTRYPOINT /go/bin/http2dripline
+CMD ["/go/bin/http2dripline", "-config", "/root/h2d-config.yaml"]
