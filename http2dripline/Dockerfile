@@ -1,0 +1,34 @@
+FROM golang
+
+# Build and install production http2dripline
+# Use this if you want http2dripline from the master branch of dripline
+#RUN go get github.com/project8/dripline/go/http2dripline
+
+# For either the local or remote development installation of http2dripline, you'll need the dependencies
+RUN go get github.com/kardianos/osext && \
+    go get github.com/spf13/viper && \
+    go get github.com/project8/dripline-go/dripline
+
+# Download, build, and install development (remote) http2dripline
+# Use this if you want http2dripline from a non-master branch of dripline
+# Specify the branch in the `git checkout` line below
+# Do not use this for the local development option using docker-compose
+#RUN apt-get clean && \
+#    apt-get update && \
+#    apt-get --fix-missing  -y install \
+#        git && \
+#    rm -rf /var/lib/apt/lists/*
+#RUN cd /go/src && \
+#    git clone https://github.com/project8/dripline && \
+#    cd dripline && \
+#    git checkout feature/h2d && \
+#    go install dripline/go/http2dripline
+
+# For local development using docker-compose, comment out the ENTRYPOINT as well as both of the above options for obtaining http2dripline,
+# and mount the appropriate volume in docker-compose.yaml.
+# You will then need to start an interactive session with the http2dripline container, and build and run the server manually.
+# > docker-compose run -p 18739:8080 http2dripline
+# # go install http2dripline
+# # http2dripline
+
+#ENTRYPOINT /go/bin/http2dripline
