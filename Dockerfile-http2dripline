@@ -5,9 +5,16 @@ FROM golang
 #RUN go get github.com/project8/dripline/go/http2dripline
 
 # For either the local or remote development installation of http2dripline, you'll need the dependencies
+ADD ./dripline /go/src/github.com/project8/dripline-go/dripline
+ADD ./http2dripline /go/src/github.com/project8/dripline-go/http2dripline
 RUN go get github.com/kardianos/osext && \
-    go get github.com/spf13/viper && \
-    go get github.com/project8/dripline-go/dripline
+    go get github.com/spf13/viper &&\
+    go get github.com/pborman/uuid &&\
+    go get github.com/streadway/amqp &&\
+    go get github.com/ugorji/go/codec &&\
+    go get github.com/project8/swarm/Go/utility &&\
+    go get github.com/project8/swarm/Go/logging
+#    go get github.com/project8/dripline-go/dripline
 
 # Download, build, and install development (remote) http2dripline
 # Use this if you want http2dripline from a non-master branch of dripline
