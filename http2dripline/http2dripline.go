@@ -1,7 +1,7 @@
 package main
 
 import (
-    "bytes"
+    //"bytes"
     "flag"
     "fmt"
     "net/http"
@@ -10,6 +10,7 @@ import (
     "os/user"
     //"strings"
     "encoding/json"
+    "time"
 
     "github.com/kardianos/osext"
     "github.com/spf13/viper"
@@ -47,12 +48,13 @@ func fillMasterSenderInfo() (e error) {
 // service needs to be at file scope so that handlers can access
 var service = new(dripline.AmqpService)
 
+/*
 func handler(w http.ResponseWriter, r *http.Request) {
     buf := new(bytes.Buffer)
     buf.ReadFrom(r.Body)
     //fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
     fmt.Fprintf(w, "I received %s!", buf)
-}
+}*/
 
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
     /*
@@ -78,24 +80,37 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, fmt.Sprint(rdErr), http.StatusInternalServerError)
     }*/
 
+    /*
     type FooStr struct {
         MsgType dripline.MsgCodeT `json:"msgtype"`
         TimeStamp string `json:"timestamp"`
-        dripline.SenderInfo
+        SenderInfo dripline.SenderInfo `json:"sender_info"`
     }
+    */
 
-    logging.Log.Notice("decoding new request\n")
+    logging.Log.Notice("\ndecoding new request")
     decoder := json.NewDecoder(r.Body)
-    var reqMessage FooStr//dripline.SenderInfo
+    //var reqMessage FooStr
+    var reqMessage dripline.Request
     err := decoder.Decode(&reqMessage)
     if err == nil {
         logging.Log.Debugf("json decoded")
-        logging.Log.Debugf("object is:\n ", reqMessage)
+        logging.Log.Debugf("object is:\n%v", reqMessage)
+        logging.Log.Debugf("msgtype is: %v", reqMessage.MsgType)
+        logging.Log.Debugf("target is: %v", reqMessage.Target)
+        logging.Log.Debugf("sender info is:\n%v", reqMessage.SenderInfo)
+        logging.Log.Debugf("operation is: %v", reqMessage.MsgOp)
     } else {
         logging.Log.Debugf("json decoder fail with: %v", err)
     }
-    //dripline.Request(r.Form["payload"])
-    //c := service.SendRequest(r.Form["target"][0], r.Form["payload"][0], 60)
+    // send the decoded message
+    var timeOut time.Duration
+    timeOut = time.Duration(60)*time.Second
+    _,e := service.SendRequest(reqMessage, timeOut)
+    if e == nil {
+    } else {
+        logging.Log.Debug("sending request failed with: %v", e)
+    }
 
     return
 }

@@ -37,7 +37,7 @@ type Message struct {
 	CorrId     string
 	MsgType    MsgCodeT
 	TimeStamp  string
-	SenderInfo
+	SenderInfo SenderInfo `json:"sender_info"`
 	Payload    interface{}
 }
 
@@ -49,7 +49,7 @@ type Request struct {
 type Reply struct {
     Message
 	RetCode       MsgCodeT
-	ReturnMessage string
+	ReturnMessage string `json:"return_msg"`
 }
 
 type Alert struct {
