@@ -8,7 +8,8 @@ import (
     "net/http/httputil"
     "os"
     "os/user"
-    "strings"
+    //"strings"
+    "encoding/json"
 
     "github.com/kardianos/osext"
     "github.com/spf13/viper"
@@ -43,6 +44,8 @@ func fillMasterSenderInfo() (e error) {
     return
 }
 
+// service needs to be at file scope so that handlers can access
+var service = new(dripline.AmqpService)
 
 func handler(w http.ResponseWriter, r *http.Request) {
     buf := new(bytes.Buffer)
@@ -52,8 +55,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
+    /*
     r.ParseForm()  //Parse url parameters passed, then parse the response packet for the POST body (request body)
     // attention: If you do not call ParseForm method, the following data can not be obtained form
+    logging.Log.Infof("new request........")
     logging.Log.Debugf("Form:\n%v", r.Form) // print information on server side.
     logging.Log.Debugf("path: %v", r.URL.Path)
     logging.Log.Debugf("scheme: %v", r.URL.Scheme)
@@ -62,13 +67,35 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
         logging.Log.Debugf("key: %v", k)
         logging.Log.Debugf("val: %v", strings.Join(v, ""))
     }
+    logging.Log.Debugf("parsing further")
+    */
 
-    reqDump, rdErr := httputil.DumpRequest(r, true)
+    // I'm not sure what this is for, the above seemed useful
+    /*reqDump, rdErr := httputil.DumpRequest(r, true)
     if rdErr == nil {
         fmt.Fprintf(w, "Request received: %q", reqDump)
     } else {
         http.Error(w, fmt.Sprint(rdErr), http.StatusInternalServerError)
+    }*/
+
+    type FooStr struct {
+        MsgType dripline.MsgCodeT `json:"msgtype"`
+        TimeStamp string `json:"timestamp"`
+        dripline.SenderInfo
     }
+
+    logging.Log.Notice("decoding new request\n")
+    decoder := json.NewDecoder(r.Body)
+    var reqMessage FooStr//dripline.SenderInfo
+    err := decoder.Decode(&reqMessage)
+    if err == nil {
+        logging.Log.Debugf("json decoded")
+        logging.Log.Debugf("object is:\n ", reqMessage)
+    } else {
+        logging.Log.Debugf("json decoder fail with: %v", err)
+    }
+    //dripline.Request(r.Form["payload"])
+    //c := service.SendRequest(r.Form["target"][0], r.Form["payload"][0], 60)
 
     return
 }
@@ -145,7 +172,8 @@ func main() {
     url := "amqp://" + amqpUser + ":" + amqpPassword + "@" + broker
     logging.Log.Debugf("AMQP URL: %v", url)
 
-    service := dripline.StartService(url, queueName)
+    // recall that service is at global scope for this file
+    service = dripline.StartService(url, queueName)
     if (service == nil) {
         logging.Log.Critical("AMQP service did not start")
         os.Exit(1)
