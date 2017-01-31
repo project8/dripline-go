@@ -120,6 +120,13 @@ func StartService(brokerAddress, queueName string) (service *AmqpService) {
 // SendRequest sends a Request message.  It creates a reply queue, begins consuming on it, and returns the channel on which the client can wait for the Reply message.
 // The request will timeout after a duration of replyTimeout.  Supply a non-positive duration to run with no timeout.
 func (service *AmqpService) SendRequest(toSend Request, replyTimeout time.Duration) (replyChan <-chan Reply, e error) {
+    // ensure that the message is being sent to the proper exchange
+    if toSend.exchange == "" {
+        toSend.exchange = "requests"
+    }
+    if toSend.exchange != "reqeusts" {
+        logging.Log.Warn("a RequestMessage should always be sent on the requests exchange")
+    }
 	logging.Log.Debug("Submitting request to send")
 
 	// First we create a new channel, create the reply queue on that channel, and start consuming
@@ -155,6 +162,7 @@ func (service *AmqpService) SendRequest(toSend Request, replyTimeout time.Durati
 	}
 
 	// Send the request
+	logging.Log.Debug("data to be sent is:", toSend)
 	service.Sender.requestChan <- toSend
 	logging.Log.Debug("Request sent")
 
@@ -628,7 +636,9 @@ func (message *Message) send(channel *amqp.Channel, body []byte) {
 	}
 
 	//logging.Log.Printf("[amqp sender] Encoded message:\n\t%v", amqpMessage)
+    logging.Log.Debugf("exchange is <%s>", (*message).exchange)
 	logging.Log.Debugf("Sending message to routing key <%s>", (*message).Target)
+
 
 	// Publish!
 	pubErr := channel.Publish((*message).exchange, (*message).Target, false, false, amqpMessage)
