@@ -125,8 +125,9 @@ func (service *AmqpService) SendRequest(toSend Request, replyTimeout time.Durati
         toSend.exchange = "requests"
     }
     if toSend.exchange != "reqeusts" {
-        logging.Log.Warn("a RequestMessage should always be sent on the requests exchange")
+        logging.Log.Warning("a RequestMessage should always be sent on the requests exchange")
     }
+    logging.Log.Debugf("sending request on exchange: %s", toSend.exchange)
 	logging.Log.Debug("Submitting request to send")
 
 	// First we create a new channel, create the reply queue on that channel, and start consuming
@@ -177,11 +178,13 @@ func (service *AmqpService) SendRequest(toSend Request, replyTimeout time.Durati
 		if replyTimeout <= 0 {
 			// Wait for a message with no timeout
 			amqpMessage = <-amqpReplyChan
+            logging.Log.Warning("got a reply (there is no timeout)")
 			messageReceived = true
 		} else {
 			// Wait for message with a timeout
 			select {
 			case amqpMessage = <-amqpReplyChan:
+                logging.Log.Warning("got a reply prior to timeout")
 				messageReceived = true
 				break
 			case <-time.After(replyTimeout):
@@ -201,6 +204,7 @@ func (service *AmqpService) SendRequest(toSend Request, replyTimeout time.Durati
 					logging.Log.Error("Unexpected request received while waiting for a reply")
 				},
 				func(reply Reply){
+                    logging.Log.Info("got an expected Reply:\n", reply)
 					replyChanFull <- reply
 				},
 				func(alert Alert){
