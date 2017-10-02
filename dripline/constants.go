@@ -8,7 +8,7 @@
 package dripline
 
 // Time format
-const TimeFormat = "2006-01-02T22:04:05Z"
+const TimeFormat = "2006-01-02T15:04:05Z"
 
 // Project 8 Wire Protocol Standards
 type MsgCodeT uint64
@@ -50,4 +50,3 @@ const (
 	RCErrDB          MsgCodeT = 400
 	RCErrUnhandled   MsgCodeT = 999
 )
-
